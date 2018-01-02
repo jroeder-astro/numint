@@ -26,37 +26,47 @@ double somecos(double x, void *params){
 double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e){
 
   double rel = 1.;
-  double N = 1000.;
+  double N = 300000.;
   double K = 3.;
   double h = (b-a)/N;
   
-  double M = 0.;
+  double M = 0;
   double M1 = 0.;
 
-  printf("start first for");
-
-  for (double i = a+h/2.; i <= b-h/2.; i += h)
+  for (double i = a+h/2.; i <= b-h/2.; i += h) // initializes M with midpoint rule
   {
   	M += h*(*f)(i,p);
   }
+  printf("this is M = %6.10lf", M);
 
-  printf("start while");
+  int cnt = 1; // counter used for stepsize in iterations > h/3. "eval, not, eval, eval, not, e, e, n,...."  
 
   while (rel >= e)
   {
+	cnt = 1;
 	M1 = 1./3. * M;
- 	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i += 2.*h/K)
+ 	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i+=0 ) // analytically derived formula for step tripling
 	{
-		M1 = h/K * (*f)(i,p);
+		M1 += h/K * (*f)(i,p);
+		if (cnt%2==0)  // doing the e, n, e, e, n, e, e, n,... stuff
+		{
+			i += h/K;
+		}
+		else
+		{
+			i += 2.*h/K; 
+		}
+		
+		cnt += 1;
 	}
 
   	rel = fabs(M-M1)/fabs(M1);  // calculate relative error
 
-  	K *= 3.; // halving the stepsize
+  	K *= 3.; // tripling the stepsize
 	M = M1; 
   }
   printf("Midoint rule. WITH STEP TRIPLING OMG!!! This gives us: M = %+6.10lf \n", M);
-
+  printf("cnt = %d\n" ,cnt);
 }
 
 
@@ -198,11 +208,12 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
 */
 
 int main(){
-  printf("start of main");
+  printf("start of main\n");
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
-  adapt_step_mid(-1., 1., p, gaussian, 0.01);
+  adapt_step_mid(0., 2., NULL, somecos, 0.99);
+  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
 
 //  int_1(-1., 1., p, gaussian);
 //  int_left_riemann(-1.,1.,p, gaussian);
