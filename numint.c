@@ -22,12 +22,44 @@ double somecos(double x, void *params){
   return x*pow(cos(2.*M_PI*x*x), 2.);
 }
 
-//double int_1(double a, double b, void *p, double (*f)(double, void *), double e){
+double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
 
-//}
+  // relative error e>0 
+  
+  double rel = 1.; 		// initialize relative error 
+  double N = 1.;   		// initialize number of steps to start with for initial stepwidth
+  double K = 2.;   		// initialize halving parameter
+  double h = (b - a) / N;	// initialize stepwidth
+  double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated start value 
+
+  double T1 = 0.;  // initialize halved stepsize value
+
+  for (double i = a + h; i <= b - h; i += h)  // value of integral before stepsize halving, trapezoidal method
+  {
+    	T += 2. * (*f)(i, p);
+  }
+
+  T *= h/2.;
+
+  while (rel >= e) // while loop for error control; runs while relative error is greater than given error 
+  {  
+ 	T1 = 1./2. * T;    // calculate value with halved stepsize value 
+	for (double i = a + h/K; i <= b-h/K; i += 2. * h/K)
+	{
+		T1 += h/K * (*f)(i,p);
+	} 
+
+	rel = fabs(T-T1)/fabs(T1);  // calculate relative error
+
+  	K *= 2.; // halving the stepsize
+	T = T1; 
+  }
+  printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
+}
 
 
 
+/*
 
 double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)) {  // e is error
   // HOW DOES ONE PUT THE PARAMETERS IN HERE???   -> this apparently works lol  
@@ -123,7 +155,7 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
 
 }
 
-
+*/
 
 int main(){
 
@@ -131,13 +163,16 @@ int main(){
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
 //  int_1(-1., 1., p, gaussian);
-  int_left_riemann(-1.,1.,p, gaussian);
-  int_right_riemann(-1.,1.,p, gaussian);
-  int_trapezoidal(-1.,1,p, gaussian);
-  int_simpson_one_loop(-1.,1,p,gaussian);
-  int_simpson_two_loop(-1.,1,p,gaussian);
+//  int_left_riemann(-1.,1.,p, gaussian);
+//  int_right_riemann(-1.,1.,p, gaussian);
+//  int_trapezoidal(-1.,1,p, gaussian);
+//  int_simpson_one_loop(-1.,1,p,gaussian);
+//  int_simpson_two_loop(-1.,1,p,gaussian);
 
 //  int_1(0., 2., NULL, somecos);
+
+  adapt_step_trap(-1.,1., p, gaussian, 0.0001);
+
 
 }
 
