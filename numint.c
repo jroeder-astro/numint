@@ -70,8 +70,6 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
 }
 
 
-
-/*
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
 
   // relative error e>0 
@@ -106,10 +104,7 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   }
   printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
 }
-*/
 
-
-/*
 
 double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)) {  // e is error
   // HOW DOES ONE PUT THE PARAMETERS IN HERE???   -> this apparently works lol  
@@ -205,15 +200,16 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
 
 }
 
-*/
+
+
 
 int main(){
   printf("start of main\n");
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
-  adapt_step_mid(0., 2., NULL, somecos, 0.99);
-  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
+//  adapt_step_mid(0., 2., NULL, somecos, 0.99);
+//  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
 
 //  int_1(-1., 1., p, gaussian);
 //  int_left_riemann(-1.,1.,p, gaussian);
