@@ -22,6 +22,46 @@ double somecos(double x, void *params){
   return x*pow(cos(2.*M_PI*x*x), 2.);
 }
 
+
+double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e){
+
+  double rel = 1.;
+  double N = 1000.;
+  double K = 3.;
+  double h = (b-a)/N;
+  
+  double M = 0.;
+  double M1 = 0.;
+
+  printf("start first for");
+
+  for (double i = a+h/2.; i <= b-h/2.; i += h)
+  {
+  	M += h*(*f)(i,p);
+  }
+
+  printf("start while");
+
+  while (rel >= e)
+  {
+	M1 = 1./3. * M;
+ 	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i += 2.*h/K)
+	{
+		M1 = h/K * (*f)(i,p);
+	}
+
+  	rel = fabs(M-M1)/fabs(M1);  // calculate relative error
+
+  	K *= 3.; // halving the stepsize
+	M = M1; 
+  }
+  printf("Midoint rule. WITH STEP TRIPLING OMG!!! This gives us: M = %+6.10lf \n", M);
+
+}
+
+
+
+/*
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
 
   // relative error e>0 
@@ -56,7 +96,7 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   }
   printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
 }
-
+*/
 
 
 /*
@@ -158,10 +198,12 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
 */
 
 int main(){
-
+  printf("start of main");
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
+  adapt_step_mid(-1., 1., p, gaussian, 0.01);
+
 //  int_1(-1., 1., p, gaussian);
 //  int_left_riemann(-1.,1.,p, gaussian);
 //  int_right_riemann(-1.,1.,p, gaussian);
@@ -171,8 +213,7 @@ int main(){
 
 //  int_1(0., 2., NULL, somecos);
 
-  adapt_step_trap(-1.,1., p, gaussian, 0.0001);
-
-
+//  adapt_step_trap(-1., 1., p, gaussian, 0.0001);
+  return 0 ; 
 }
 
