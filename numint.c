@@ -22,68 +22,122 @@ double somecos(double x, void *params){
   return x*pow(cos(2.*M_PI*x*x), 2.);
 }
 
-double integration_1(double a, double b, void *p, double (*f)(double, void *), double e){
+//double int_1(double a, double b, void *p, double (*f)(double, void *), double e){
 
-  
-
-
+//}
 
 
-}
 
 
-/*
-
-double integration_1(double a, double b, void *p, double (*f)(double, void *)){  // e is error
-                                  // HOW DOES ONE PUT THE PARAMETERS IN HERE???   -> this apparently works lol  
+double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)) {  // e is error
+  // HOW DOES ONE PUT THE PARAMETERS IN HERE???   -> this apparently works lol  
   // double *p = (double*)params;  // Line not needed if void *p instead of void *params
 
-  double N = 10000.;
-  double h = (b-a)/N;
+  // double N = 10000.;
+  double N =10000.;
+  double h = (b - a) / N;
 
   // left Riemann sum
-  double L = (*f)(a,p);                    // this bitch is the reason you gotta start with a+h in the for loop
-  for (double i = a+h; i <= b-h; i += h){
-  	L += (*f)(i,p);
+  double L = (*f)(a, p);                    // this bitch is the reason you gotta start with a+h in the for loop
+  for (double i = a + h; i <= b - h; i += h)
+  {
+    L += (*f)(i, p);
   }
-  printf("Left sum of function is %f\n", h*L);   
 
+  L *= h;
+  printf("Left sum of function is %+6.10lf\n", L);
+}
+
+double int_right_riemann(double a, double b, void *p, double (*f)(double, void *)) {
   // right Riemann sum
-  double R = (*f)(a+h,p);
-  for (double i = a+2.*h; i <= b; i += h){
-	R += (*f)(i,p);
+  double N =10000.;
+  double h = (b - a) / N;
+  double R = 0;
+  
+  for (double i = a + h; i <= b; i += h)
+  {
+    R += (*f)(i, p);
   }
-  printf("Right sum of function is %f\n", h*R); 
 
+  R *= h;
+  printf("Right sum of function is %+6.10lf\n", R);
+}
+
+double int_trapezoidal(double a, double b, void *p, double (*f)(double, void *)) {
   // trapezoidal rule
-  double T = (*f)(a,p)+(*f)(b,p);
-  for (double i = a+h; i <= b-h; i += h){
-	T += 2.*(*f)(i,p);
-  }
-  printf("Trapezoidal int. of function is %f\n", h/2*T); 
+  double N =10000.;
+  double h = (b - a) / N;
+  double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
 
-  // Simpson's rule
-  double S = (*f)(a,p)+(*f)(b,p);
-  for (double i = a+h; i <= b-h; i += h){
-  	S += 2.*(*f)(i,p);
+  
+  for (double i = a + h; i <= b - h; i += h)
+  {
+    T += 2. * (*f)(i, p);
   }
-  for (double i = a+h/2.; i <= b-h/2.; i += h){
-	S += 4.*(*f)(i,p);
-  }
-  printf("Simpson's rule gives us %f\n", h/6.*S); 
+
+  T *= h/2.;
+
+  printf("Trapezoidal int. of function is %+6.10lf\n", T);
 
 }
 
-*/
+double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, void *)){
+  // Simpson's rule
+  double N =100000.;
+  double h = (b - a) / N;
+  double S = (*f)(a,p)+(*f)(b,p);
+  for (double i = a+h; i <= b-h; i += h){
+    S += 2. * (*f)(i,p);
+    S += 4. * (*f)(i-h/2.,p);   // we encouter at this postion that there is a difference between this an the older Veriosn
+    // with two for loops.
 
- 
+  }
+
+  S += 4. * (*f)(b-h/2.,p);
+
+  S *= h/6.;
+
+  printf("Simpson's rule gives us %+6.10lf\n", S);
+
+}
+
+double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, void *)){
+  // Simpson's rule
+  double N =100000.;
+  double h = (b - a) / N;
+  double S = (*f)(a,p)+(*f)(b,p);
+  for (double i = a+h; i <= b-h; i += h) {
+    S += 2. * (*f)(i, p);
+  }
+  for (double i = a+h/2.; i<=b-h/2.; i+=h){
+
+
+    S += 4. * (*f)(i,p);   // we encouter at this postion that there is a difference between this an the older Veriosn
+    // with two for loops.
+
+  }
+
+  S *= h/6.;
+
+  printf("Simpson's rule gives us %+6.10lf\n", S);
+
+}
+
+
+
 int main(){
-  
+
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
-//  integration_1(-1., 1., p, gaussian);
-  integration_1(0., 2., NULL, somecos);
-  
+//  int_1(-1., 1., p, gaussian);
+  int_left_riemann(-1.,1.,p, gaussian);
+  int_right_riemann(-1.,1.,p, gaussian);
+  int_trapezoidal(-1.,1,p, gaussian);
+  int_simpson_one_loop(-1.,1,p,gaussian);
+  int_simpson_two_loop(-1.,1,p,gaussian);
+
+//  int_1(0., 2., NULL, somecos);
+
 }
 
