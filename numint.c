@@ -23,6 +23,13 @@ double somecos(double x, void *params){
 }
 
 
+double quadexp(double x, void *params){
+
+  return exp(-pow(x, 2.));
+}
+
+
+
 double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e){
 
   double rel = 1.;
@@ -32,6 +39,10 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   
   double M = 0;
   double M1 = 0.;
+  
+  if (a==b){
+	return 0;
+  }  
 
   for (double i = a+h/2.; i <= b-h/2.; i += h) // initializes M with midpoint rule
   {
@@ -67,7 +78,78 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   }
   printf("Midoint rule. WITH STEP TRIPLING OMG!!! This gives us: M = %+6.10lf \n", M);
   printf("cnt = %d\n" ,cnt);
+  return M;
 }
+
+/*
+double trafo(double (*f)(double, void *), double x, void *p){
+
+  return 1./(x*x) * (*f)(1./x, p);
+
+}
+*/
+
+double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), double e){
+
+  if (isinf == 0)
+  {
+	printf("a must be greater than zero and the upper must equal infinity.");
+  	return 1.;
+  }
+  
+  double result = 0;
+
+  double b = 1.;
+  
+  result = adapt_step_mid(a, 1, p, f, e);  
+  
+  a = 0.;
+  double rel = 1.;
+  double N = 300000.;
+  double K = 3.;
+  double h = (b-a)/N;
+  
+  double M = 0;
+  double M1 = 0.;
+
+  for (double i = a+h/2.; i <= b-h/2.; i += h) // initializes M with midpoint rule
+  {
+  	M += h*1./(i*i) * (*f)((1./i),p);
+  }
+  printf("this is M = %6.10lf", M);
+
+  int cnt = 1; // counter used for stepsize in iterations > h/3. "eval, not, eval, eval, not, e, e, n,...."  
+
+  while (rel >= e)
+  {
+	cnt = 1;
+	M1 = 1./3. * M;
+ 	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i+=0 ) // analytically derived formula for step tripling
+	{
+		M1 += h/K *1./(i*i)* (*f)((1./i),p);
+		if (cnt%2==0)  // doing the e, n, e, e, n, e, e, n,... stuff
+		{
+			i += h/K;
+		}
+		else
+		{
+			i += 2.*h/K; 
+		}
+		
+		cnt += 1;
+	}
+
+  	rel = fabs(M-M1)/fabs(M1);  // calculate relative error
+
+  	K *= 3.; // tripling the stepsize
+	M = M1; 
+  }
+  result += M;
+  printf("Midoint rule. WITH STEP TRIPLING OMG!!! This gives us: M = %+6.10lf \n", result);
+  return result;
+}
+
+
 
 
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
@@ -208,6 +290,8 @@ int main(){
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
+  infty_bound(0, 1, p, quadexp, 0.01);
+
 //  adapt_step_mid(0., 2., NULL, somecos, 0.99);
 //  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
 
