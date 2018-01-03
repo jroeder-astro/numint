@@ -309,45 +309,46 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
 
   double result = 0.;
   double error = abe;
-  double rndm = 0.;
-  double dummy_eval = 0.;
+  double rndm = 0.;	// random number initialization
+  double dummy_eval = 0.; // dummy to avoid too many evaluations in innermost for loop
 
-  time_t t ;
+  time_t t ;    // this is to give time 
   struct tm tm;
 
-  srand(1.);
+  srand(time(NULL));  // RNG seed
 
-  while (error >= abe)
+  while (error >= abe)  // error control
   {
-	 t = time(NULL);
+	 t = time(NULL);  
 	 tm = *localtime(&t);
 	 error = 0;
 	 result = 0;
- 	 printf("We are at N = %lf\n at : ", N);
+ 	 printf("We are at N = %lf\n at : ", N);    // keeping track of calculations is awesome
          printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);	 
 
  	 for (double i = a; i <= b; i += h) 
   	 {
-		double partial_sum = 0.;
-		double partial_sum_square = 0;
-		double partial_error = 0.;
+		double partial_sum = 0.;    // sum part of <f> 
+		double partial_sum_square = 0;   // sum part of <f²>
+		double partial_error = 0.;   // sqrt part of error
+				// above three lines are for one interval only 
 		for (double l = 1; l <= N; l++)
 		{
-			rndm = (double)rand()/RAND_MAX*h;
-			dummy_eval = (*f)(i+rndm,p);
+			rndm = (double)rand()/RAND_MAX*h;    // actual RNG
+			dummy_eval = (*f)(i+rndm,p);         // dummy calculation
 
-			partial_sum += dummy_eval;
- 			partial_sum_square +=  pow(dummy_eval,2.);
+			partial_sum += dummy_eval;  // building up sum part of <f>
+ 			partial_sum_square +=  pow(dummy_eval,2.);  // building <f²>
 		
 		}
-		partial_sum /= N;
-		partial_sum_square /= N;
-		partial_error = sqrt((partial_sum_square - pow(partial_sum,2.))/N);
+		partial_sum /= N;   // calculating actual <f>
+		partial_sum_square /= N;   // calculating <f²>
+		partial_error = sqrt((partial_sum_square - pow(partial_sum,2.))/N); // calculating error
 		
-		result += partial_sum * h;
+		result += partial_sum * h;   // calculation end result
 		error += partial_error *h;
  	 }
-  N *= 2.;
+  N *= 2.;   // increasing number of samples to get a more precise result
   }
   
   printf("Monte Carlo integral gives us %6.10lf +- %6.10lf \n", result, error);
