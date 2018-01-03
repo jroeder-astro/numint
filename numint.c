@@ -29,6 +29,12 @@ double quadexp(double x, void *params){
 }
 
 
+double inverse_sqrt(double x, void *params){
+
+  return 1./sqrt(x);
+}
+
+
 double identity_trafo(double(*f)(double, void *), double x, void *p){
   // Gives back the function itself
   // Needed for non-infinite boundaries
@@ -41,6 +47,15 @@ double inverse_square_trafo(double(*f)(double, void *), double x, void *p){
   // Gives back function called with inverse variable multiplied by inverse variable squared
   // used for infinity boundary algorithm
   return 1./(x*x)* (*f)(1./x, p);
+}
+
+
+double singularity_trafo(double(*f)(double, void *), double x, void *p){
+  // Implementing given transformation to not integrate over "1/0" 
+  double *par = (double *)p;
+  double g = par[0]; // parameter use...
+  double a = par[1];
+  return  pow(x, g/(1.-g)) * (*f)(pow(x, 1/(1.-g))+a,p);
 }
 
 
@@ -66,7 +81,7 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   {
   	M += h*(*trafo)(*f,i,p);
   }
-  printf("this is M = %6.10lf", M);
+  printf("this is M = %6.10lf \n", M);
 
   int cnt = 1; // counter used for stepsize in iterations > h/3. "eval, not, eval, eval, not, e, e, n,...."  
 
@@ -127,6 +142,31 @@ double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), do
   
   printf("Midoint rule. WITH STEP TRIPLING OMG!!! This gives us: M = %+6.10lf \n", result);
   return result;
+}
+
+
+// Optional task: singularity integration
+// Should at some point be revamped as parameters are technically being misused
+
+double sing_int(double a, double b, void *p, double(*f)(double, void*), double e){
+    
+  double *par = (double *)p; // parameters should not be used that way
+  double g = par[0];
+
+  if (g == 1.) // if g=0, one would divide by zero
+  {
+  	printf("g is not allowed to be one.\n");
+	return 0.;
+  }
+
+  double result = 0.;
+  b = pow((b-a), (1.-g)); // new upper bound after trafo
+  a = 0.; 		  // new lower bound after trafo
+  
+  result += 1./(1.-g) * adapt_step_mid(a, b, p, f, e, singularity_trafo);
+  printf("Singularity integration gives us: S = %+6.10lf\n", result);
+  return result;
+
 }
 
 
@@ -268,10 +308,15 @@ int main(){
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
+
+  double q[2] = {0.5,0.}; // order of singularity
+
+  sing_int(0., 1., q, inverse_sqrt, 0.000001);
+
 //  infty_bound(0, 1, NULL, quadexp, 0.01);
 
-  adapt_step_mid(0., 2., NULL, somecos, 0.99, identity_trafo);
-  adapt_step_mid(0., 2., NULL, somecos, 0.0001, identity_trafo);
+//  adapt_step_mid(0., 2., NULL, somecos, 0.99, identity_trafo);
+//  adapt_step_mid(0., 2., NULL, somecos, 0.0001, identity_trafo);
 
 //  int_1(-1., 1., p, gaussian);
 //  int_left_riemann(-1.,1.,p, gaussian);
