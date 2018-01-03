@@ -29,24 +29,42 @@ double quadexp(double x, void *params){
 }
 
 
+double identity_trafo(double(*f)(double, void *), double x, void *p){
+  // Gives back the function itself
+  // Needed for non-infinite boundaries
+  // For normal integration, GIVE THIS TO ADAPT_STEP_MID!
+  return (*f)(x,p);
+}
 
-double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e){
 
+double inverse_square_trafo(double(*f)(double, void *), double x, void *p){
+  // Gives back function called with inverse variable multiplied by inverse variable squared
+  // used for infinity boundary algorithm
+  return 1./(x*x)* (*f)(1./x, p);
+}
+
+
+double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e, 
+                      double(*trafo)(double(*)(double, void *), double, void *)){
+  // This function now takes an extra argument "trafo"
+  // Which usually is an indentity_trafo which only gives back the function itself.
   double rel = 1.;
-  double N = 300000.;
+  double N = 1000.;
   double K = 3.;
   double h = (b-a)/N;
   
   double M = 0;
   double M1 = 0.;
   
-  if (a==b){
+  if (a == b){
+        // "empty" integralls shall not be evaluated numerically
+
 	return 0;
   }  
 
   for (double i = a+h/2.; i <= b-h/2.; i += h) // initializes M with midpoint rule
   {
-  	M += h*(*f)(i,p);
+  	M += h*(*trafo)(*f,i,p);
   }
   printf("this is M = %6.10lf", M);
 
@@ -58,7 +76,7 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
 	M1 = 1./3. * M;
  	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i+=0 ) // analytically derived formula for step tripling
 	{
-		M1 += h/K * (*f)(i,p);
+		M1 += h/K * (*trafo)(*f,i,p);
 		if (cnt%2==0)  // doing the e, n, e, e, n, e, e, n,... stuff
 		{
 			i += h/K;
@@ -81,75 +99,35 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   return M;
 }
 
-/*
-double trafo(double (*f)(double, void *), double x, void *p){
-
-  return 1./(x*x) * (*f)(1./x, p);
-
-}
-*/
 
 double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), double e){
-
-  if (isinf == 0)
-  {
-	printf("a must be greater than zero and the upper must equal infinity.");
-  	return 1.;
-  }
+  // Used if upper bound is infinity
   
+  if (isinf == 0) 
+  {
+  	// Check if upper bound really is infinity
+	// One meaning it is infinity, when 0 it is not.
+	printf("a must be greater than zero and the upper must equal infinity.");
+  	return 0.;
+  }
+   
   double result = 0;
 
-  double b = 1.;
+  if (a <= 0)
+  {
+	// Splitting Integral for non-zero lower bound
+	// Also avoids upper < lower bound after trafo
+	result += adapt_step_mid(a, 1, p, f, e, identity_trafo);
+	a = 1.;
+  }
   
-  result = adapt_step_mid(a, 1, p, f, e);  
-  
+  double b = 1./a;
   a = 0.;
-  double rel = 1.;
-  double N = 300000.;
-  double K = 3.;
-  double h = (b-a)/N;
+  result += adapt_step_mid(a, 1, p, f, e, inverse_square_trafo);  
   
-  double M = 0;
-  double M1 = 0.;
-
-  for (double i = a+h/2.; i <= b-h/2.; i += h) // initializes M with midpoint rule
-  {
-  	M += h*1./(i*i) * (*f)((1./i),p);
-  }
-  printf("this is M = %6.10lf", M);
-
-  int cnt = 1; // counter used for stepsize in iterations > h/3. "eval, not, eval, eval, not, e, e, n,...."  
-
-  while (rel >= e)
-  {
-	cnt = 1;
-	M1 = 1./3. * M;
- 	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i+=0 ) // analytically derived formula for step tripling
-	{
-		M1 += h/K *1./(i*i)* (*f)((1./i),p);
-		if (cnt%2==0)  // doing the e, n, e, e, n, e, e, n,... stuff
-		{
-			i += h/K;
-		}
-		else
-		{
-			i += 2.*h/K; 
-		}
-		
-		cnt += 1;
-	}
-
-  	rel = fabs(M-M1)/fabs(M1);  // calculate relative error
-
-  	K *= 3.; // tripling the stepsize
-	M = M1; 
-  }
-  result += M;
   printf("Midoint rule. WITH STEP TRIPLING OMG!!! This gives us: M = %+6.10lf \n", result);
   return result;
 }
-
-
 
 
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
@@ -290,10 +268,10 @@ int main(){
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
-  infty_bound(0, 1, p, quadexp, 0.01);
+//  infty_bound(0, 1, NULL, quadexp, 0.01);
 
-//  adapt_step_mid(0., 2., NULL, somecos, 0.99);
-//  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
+  adapt_step_mid(0., 2., NULL, somecos, 0.99, identity_trafo);
+  adapt_step_mid(0., 2., NULL, somecos, 0.0001, identity_trafo);
 
 //  int_1(-1., 1., p, gaussian);
 //  int_left_riemann(-1.,1.,p, gaussian);
