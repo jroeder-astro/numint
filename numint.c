@@ -146,31 +146,6 @@ double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), do
 }
 
 
-// Optional task: singularity integration
-// Should at some point be revamped as parameters are technically being misused
-
-double sing_int(double a, double b, void *p, double(*f)(double, void*), double e){
-    
-  double *par = (double *)p; // parameters should not be used that way
-  double g = par[0];
-
-  if (g == 1.) // if g=0, one would divide by zero
-  {
-  	printf("g is not allowed to be one.\n");
-	return 0.;
-  }
-
-  double result = 0.;
-  b = pow((b-a), (1.-g)); // new upper bound after trafo
-  a = 0.; 		  // new lower bound after trafo
-  
-  result += 1./(1.-g) * adapt_step_mid(a, b, p, f, e, singularity_trafo);
-  printf("Singularity integration gives us: S = %+6.10lf\n", result);
-  return result;
-
-}
-
-
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
 
   // relative error e>0 
@@ -356,6 +331,88 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
 }
 
 
+// Optional task: singularity integration
+// Should at some point be revamped as parameters are technically being misused
+
+double sing_int(double a, double b, void *p, double(*f)(double, void*), double e){
+    
+  double *par = (double *)p; // parameters should not be used that way
+  double g = par[0];
+
+  if (g == 1.) // if g=0, one would divide by zero
+  {
+  	printf("g is not allowed to be one.\n");
+	return 0.;
+  }
+
+  double result = 0.;
+  b = pow((b-a), (1.-g)); // new upper bound after trafo
+  a = 0.; 		  // new lower bound after trafo
+  
+  result += 1./(1.-g) * adapt_step_mid(a, b, p, f, e, singularity_trafo);
+  printf("Singularity integration gives us: S = %+6.10lf\n", result);
+  return result;
+
+}
+
+
+double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), double e){
+
+  double S = (*f)(a,p)+(*f)(b,p); // intital value, derived analytically
+  double N = 100000.;
+  double K = 2.;
+  double h = (b - a) / N;
+  double S1 = 0.;
+
+  double dummy_subs = 0.; // we need a substitute variable since we derived analytically that the following
+			  // while loop can produce stepsize halfing with the former value minus this subs
+  double dummy_eval = 0.; // need this for evaluation efficiency
+
+  double rel = 1.;	  // relative error initiation
+  // nor
+  for (double i = a+h; i <= b-h; i += h)
+  {
+	S += 2. * (*f)(i,p);
+	dummy_eval = (*f)(i-h/2.,p);
+  	S += 4. * dummy_eval;	    // we encouter at this postion that there is a 
+                                    // difference between this an the older version
+  				    // with two for loops..
+
+	dummy_subs += dummy_eval;
+
+  }
+  // Trick needed to avoid second loop
+  dummy_eval = (*f)(b-h/2.,p);
+  
+  S += 4. * dummy_eval;
+  dummy_subs += dummy_eval;
+
+  S *= h/6.;
+  while (rel >= e)
+  {
+	// analytically derived formula
+	S1 = 1./2. * (S - h/3. * dummy_subs);
+	for (double i = a+h/(2.*K); i <= b-h/(2.*K); i += h/K)
+	{
+		dummy_eval += (*f)(i,p);
+		
+	}
+
+	
+ 	S1 += 2. * h/ (3. * K) * dummy_eval; // analytically derived
+  	dummy_subs += h/3. *  dummy_eval; // analytically derived
+	// normal stepsize halfing process
+	rel = fabs(S1-S)/fabs(S1);
+	S = S1;
+	K *= 2.;
+  }
+
+  printf("Simpson's method, now with stepsize halving! Only 99 Cents!! Only Here!! Gives: %+6.10lf\n", S);
+  return S;
+
+}
+
+
 
 
 int main(){
@@ -367,7 +424,9 @@ int main(){
 
   double q[2] = {0.5,0.}; // order of singularity
 
-  sing_int(0., 1., q, inverse_sqrt, 0.000001);
+  adapt_step_simp(-1., 1., p, gaussian, 0.01);
+  
+//  sing_int(0., 1., q, inverse_sqrt, 0.000001);
 
 //  infty_bound(0, 1, NULL, quadexp, 0.01);
 
