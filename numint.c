@@ -1,4 +1,5 @@
 #include<math.h>
+#include<time.h>
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -201,6 +202,59 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
 }
 
 
+double montecarlo(double a, double b, void *p,  double (*f)(double, void *), double abe){
+
+  double N = 1000.;
+  double h = (b-a)/N;
+
+  double result = 0.;
+  double error = abe;
+  double rndm = 0.;
+  double dummy_eval = 0.;
+
+  time_t t ;
+  struct tm tm;
+
+  srand(1.);
+
+  while (error >= abe)
+  {
+	 t = time(NULL);
+	 tm = *localtime(&t);
+	 error = 0;
+	 result = 0;
+ 	 printf("We are at N = %lf\n at : ", N);
+         printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);	 
+
+ 	 for (double i = a; i <= b; i += h) 
+  	 {
+		double partial_sum = 0.;
+		double partial_sum_square = 0;
+		double partial_error = 0.;
+		for (double l = 1; l <= N; l++)
+		{
+			rndm = (double)rand()/RAND_MAX*h;
+			dummy_eval = (*f)(i+rndm,p);
+
+			partial_sum += dummy_eval;
+ 			partial_sum_square +=  pow(dummy_eval,2.);
+		
+		}
+		partial_sum /= N;
+		partial_sum_square /= N;
+		partial_error = sqrt((partial_sum_square - pow(partial_sum,2.))/N);
+		
+		result += partial_sum * h;
+		error += partial_error *h;
+ 	 }
+  N *= 2.;
+  }
+  
+  printf("Monte Carlo integral gives us %6.10lf +- %6.10lf \n", result, error);
+  return result;
+}
+
+
 
 
 int main(){
@@ -208,6 +262,10 @@ int main(){
   double x;
   double p[2] = {0., 1.}; // array with mu and sigma
   gaussian(x, p);
+
+  montecarlo(-1., 1., p, gaussian, 0.000001);
+
+
 //  adapt_step_mid(0., 2., NULL, somecos, 0.99);
 //  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
 
