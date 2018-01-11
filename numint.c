@@ -5,8 +5,32 @@
 #include<stdlib.h>
 
 
+// =================================
 // LIBRARY FOR NUMERICAL INTEGRATION
+// =================================
 
+
+/*
+
+Commit message:
+added return statements, turned double loops into int loops, removed old calls in main
+
+Fixed loops in:    (sing_int & infty_bound have no for loops)
+
+trapezoidal
+left sum i
+right sum
+simpson rule (1 loop version)
+monte_carlo
+
+adapt_step_mid (hopefully)
+adapt_step_trap, first for loop
+adapt_step_simp, first for loop
+
+*/
+
+
+// FUNCTIONS
 
 double gaussian(double x, void *params){
 
@@ -36,6 +60,9 @@ double inverse_sqrt(double x, void *params){
 }
 
 
+// TRANSFORMATIONS
+
+
 double identity_trafo(double(*f)(double, void *), double x, void *p){
   // Gives back the function itself
   // Needed for non-infinite boundaries
@@ -60,6 +87,9 @@ double singularity_trafo(double(*f)(double, void *), double x, void *p){
 }
 
 
+// INTEGRATION METHODS
+
+
 double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e, 
                       double(*trafo)(double(*)(double, void *), double, void *)){
   // This function now takes an extra argument "trafo"
@@ -69,7 +99,7 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   double K = 3.;
   double h = (b-a)/N;
   
-  double M = 0;
+  double M = h*(*trafo)(*f,a+h/2.,p);
   double M1 = 0.;
   
   if (a == b){
@@ -78,9 +108,10 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
 	return 0;
   }  
 
-  for (double i = a+h/2.; i <= b-h/2.; i += h) // initializes M with midpoint rule
+  for (int i = 1; i <= N-1; i ++) // initializes M with midpoint rule
   {
-  	M += h*(*trafo)(*f,i,p);
+        double m = a+i*h/2.+i*h;
+  	M += h*(*trafo)(*f,m,p);
   }
   printf("this is M = %6.10lf \n", M);
 
@@ -92,6 +123,10 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
 	M1 = 1./3. * M;
  	for (double i=a+h/(2.* K); i <= b-h/(2.* K); i+=0 ) // analytically derived formula for step tripling
 	{
+		// We do not actually loop here, the "loop" is executed by an if statement to
+		// implement the e,n,e,e,n,e,e,n,...,n,e law. It might not matter here if
+		// there is a double in the for loop.
+
 		M1 += h/K * (*trafo)(*f,i,p);
 		if (cnt%2==0)  // doing the e, n, e, e, n, e, e, n,... stuff
 		{
@@ -151,16 +186,17 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   // relative error e>0 
   
   double rel = 1.; 		// initialize relative error 
-  double N = 1.;   		// initialize number of steps to start with for initial stepwidth
+  double N = 1000.;   		// initialize number of steps to start with for initial stepwidth
   double K = 2.;   		// initialize halving parameter
   double h = (b - a) / N;	// initialize stepwidth
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated start value 
 
   double T1 = 0.;  // initialize halved stepsize value
 
-  for (double i = a + h; i <= b - h; i += h)  // value of integral before stepsize halving, trapezoidal method
+  for (int i = 1; i <= N-1; i ++)  // value of integral before stepsize halving, trapezoidal method
   {
-    	T += 2. * (*f)(i, p);
+	double m = a+i*h;
+    	T += 2. * (*f)(m, p);
   }
 
   T *= h/2.;
@@ -168,8 +204,10 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   while (rel >= e) // while loop for error control; runs while relative error is greater than given error 
   {  
  	T1 = 1./2. * T;    // calculate value with halved stepsize value 
-	for (double i = a + h/K; i <= b-h/K; i += 2. * h/K)
-	{
+	for (int i = 0.; i <= /* N-1   */ ; i ++)  // That .../K thing is difficult to get into an int loop
+	{ 		      // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop, 
+			      // with stepsize 2h/K
+		double m = a + h/K + i * 2.*h/K  ;
 		T1 += h/K * (*f)(i,p);
 	} 
 
@@ -179,6 +217,7 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
 	T = T1; 
   }
   printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
+  return T;
 }
 
 
@@ -191,15 +230,18 @@ double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)
   double h = (b - a) / N;
 
   // left Riemann sum
-  double L = (*f)(a, p);                    // this bitch is the reason you gotta start with a+h in the for loop
-  for (double i = a + h; i <= b - h; i += h)
+  double L = (*f)(a, p);           // this bitch is the reason you gotta start with a+h in the for loop
+  for (int i = 1; i <=N-1; i ++)
   {
-    L += (*f)(i, p);
+    double m = a+i*h;
+    L += (*f)(m, p);
   }
 
   L *= h;
-  printf("Left sum of function is %+6.10lf\n", L);
+  printf("Left sum of function is %+6.30lf\n", L);
+  return L;
 }
+
 
 double int_right_riemann(double a, double b, void *p, double (*f)(double, void *)) {
   // right Riemann sum
@@ -207,16 +249,19 @@ double int_right_riemann(double a, double b, void *p, double (*f)(double, void *
   double h = (b - a) / N;
   double R = 0;
   
-  for (double i = a + h; i <= b; i += h)
+  for (int i = 1; i <= N; i ++)
   {
-    R += (*f)(i, p);
+    double m = a+i*h;
+    R += (*f)(m, p);
   }
 
   R *= h;
-  printf("Right sum of function is %+6.10lf\n", R);
+  printf("Right sum of function is %+6.30lf\n", R);
+  return R;
 }
 
-double int_trapezoidal(double a, double b, void *p, double (*f)(double, void *)) {
+
+double int_trapezoidal_double(double a, double b, void *p, double (*f)(double, void *)) {
   // trapezoidal rule
   double N =10000.;
   double h = (b - a) / N;
@@ -230,19 +275,42 @@ double int_trapezoidal(double a, double b, void *p, double (*f)(double, void *))
 
   T *= h/2.;
 
-  printf("Trapezoidal int. of function is %+6.10lf\n", T);
-
+  printf("Trapezoidal int. of funct., doublez loop, is %+6.30lf\n", T);
+  return T;
 }
+
+
+double int_trapezoidal_int(double a, double b, void *p, double (*f)(double, void *)) {
+  // trapezoidal rule
+  double N =10000.;
+  double h = (b - a) / N;
+  double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
+
+  
+  for (int i = 1; i <= N-1; i ++)
+  {
+    double m = a+i*h;
+    T += 2. * (*f)(m, p);
+  }
+
+  T *= h/2.;
+
+  printf("Trapezoidal int. of funct., integer loop, is %+6.30lf\n", T);
+  return T;
+}
+
 
 double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, void *)){
   // Simpson's rule
   double N =100000.;
   double h = (b - a) / N;
   double S = (*f)(a,p)+(*f)(b,p);
-  for (double i = a+h; i <= b-h; i += h){
-    S += 2. * (*f)(i,p);
-    S += 4. * (*f)(i-h/2.,p);   // we encouter at this postion that there is a difference between this an the older Veriosn
-    // with two for loops.
+  for (int i = 1; i <= N-1; i ++){
+
+    double m = a+i*h;
+    S += 2. * (*f)(m,p);
+    S += 4. * (*f)(m-h/2.,p);   // We encouter at this postion that there is a difference 
+			 	// between this and the older version with two for loops.
 
   }
 
@@ -251,29 +319,34 @@ double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, voi
   S *= h/6.;
 
   printf("Simpson's rule gives us %+6.10lf\n", S);
-
+  return S;
 }
 
+
 double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, void *)){
-  // Simpson's rule
+  // Simpson's rule // OUTDATED!!!
+  // VERY crappy to do with two loops using m instead of i, DO NOT TOUCH THIS FUNCTION
   double N =100000.;
   double h = (b - a) / N;
   double S = (*f)(a,p)+(*f)(b,p);
-  for (double i = a+h; i <= b-h; i += h) {
-    S += 2. * (*f)(i, p);
+  for (int i = 1; i <= N-1; i ++) {
+    
+    double m = a+i*h;
+    S += 2. * (*f)(m, p);
   }
   for (double i = a+h/2.; i<=b-h/2.; i+=h){
 
+    double m = a+i*h;
 
-    S += 4. * (*f)(i,p);   // we encouter at this postion that there is a difference between this an the older Veriosn
-    // with two for loops.
+    S += 4. * (*f)(m,p);   // We encouter at this position that there is a difference 
+			   // between this and the older version with two for loops.
 
   }
 
   S *= h/6.;
 
   printf("Simpson's rule gives us %+6.10lf\n", S);
-
+  return S;
 }
 
 
@@ -301,16 +374,18 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
  	 printf("We are at N = %lf\n at : ", N);    // keeping track of calculations is awesome
          printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);	 
 
- 	 for (double i = a; i <= b; i += h) 
+ 	 for (int i = 0; i <= N; i ++) 
   	 {
+	    	double m = a+i*h;
+
 		double partial_sum = 0.;    // sum part of <f> 
-		double partial_sum_square = 0;   // sum part of <f²>
+		double partial_sum_square = 0.;   // sum part of <f²>
 		double partial_error = 0.;   // sqrt part of error
 				// above three lines are for one interval only 
-		for (double l = 1; l <= N; l++)
+		for (int l = 1; l <= N; l++)
 		{
 			rndm = (double)rand()/RAND_MAX*h;    // actual RNG
-			dummy_eval = (*f)(i+rndm,p);         // dummy calculation
+			dummy_eval = (*f)(m + rndm,p);         // dummy calculation
 
 			partial_sum += dummy_eval;  // building up sum part of <f>
  			partial_sum_square +=  pow(dummy_eval,2.);  // building <f²>
@@ -356,6 +431,8 @@ double sing_int(double a, double b, void *p, double(*f)(double, void*), double e
 }
 
 
+// Optional task: Simpson's rule with stepsize halving
+
 double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), double e){
 
   double S = (*f)(a,p)+(*f)(b,p); // intital value, derived analytically
@@ -370,14 +447,13 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
 
   double rel = 1.;	  // relative error initiation
   // nor
-  for (double i = a+h; i <= b-h; i += h)
+  for (int i = 1; i <= N-1; i ++)
   {
-	S += 2. * (*f)(i,p);
-	dummy_eval = (*f)(i-h/2.,p);
-  	S += 4. * dummy_eval;	    // we encouter at this postion that there is a 
-                                    // difference between this an the older version
-  				    // with two for loops..
+	double m = a+i*h;
 
+	S += 2. * (*f)(m,p);
+	dummy_eval = (*f)(m - h/2.,p);
+  	S += 4. * dummy_eval;
 	dummy_subs += dummy_eval;
 
   }
@@ -393,12 +469,11 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
 	// analytically derived formula
 	S1 = 1./2. * (S - h/3. * dummy_subs);
 	for (double i = a+h/(2.*K); i <= b-h/(2.*K); i += h/K)
-	{
+	{			// Same problem as in the previous adapt_step_... function.
+				// How does one convert this for loop into an int loop?
 		dummy_eval += (*f)(i,p);
-		
 	}
 
-	
  	S1 += 2. * h/ (3. * K) * dummy_eval; // analytically derived
   	dummy_subs += h/3. *  dummy_eval; // analytically derived
 	// normal stepsize halfing process
@@ -414,42 +489,44 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
 
 
 
-
 int main(){
-  printf("start of main\n");
+  
   double x;
+
   double p[2] = {0., 1.}; // array with mu and sigma
-  gaussian(x, p);
-
-
+  
   double q[2] = {0.5,0.}; // order of singularity
 
-  adapt_step_simp(-1., 1., p, gaussian, 0.01);
+
+//  adapt_step_simp(-1., 1., p, gaussian, 0.01);
+
   
 //  sing_int(0., 1., q, inverse_sqrt, 0.000001);
 
+
 //  infty_bound(0, 1, NULL, quadexp, 0.01);
+
 
 //  adapt_step_mid(0., 2., NULL, somecos, 0.99, identity_trafo);
 //  adapt_step_mid(0., 2., NULL, somecos, 0.0001, identity_trafo);
+
   
 //  montecarlo(-1., 1., p, gaussian, 0.000001);
 
 
-//  adapt_step_mid(0., 2., NULL, somecos, 0.99);
-//  adapt_step_mid(0., 2., NULL, somecos, 0.0001);
+  int_left_riemann(-1.,1.,p, gaussian);
+  int_right_riemann(-1.,1.,p, gaussian);
+
+  int_trapezoidal_int(-1.,1,p, gaussian);
+  int_trapezoidal_double(-1.,1,p, gaussian);
 
 
-//  int_1(-1., 1., p, gaussian);
-//  int_left_riemann(-1.,1.,p, gaussian);
-//  int_right_riemann(-1.,1.,p, gaussian);
-//  int_trapezoidal(-1.,1,p, gaussian);
 //  int_simpson_one_loop(-1.,1,p,gaussian);
 //  int_simpson_two_loop(-1.,1,p,gaussian);
 
-//  int_1(0., 2., NULL, somecos);
 
 //  adapt_step_trap(-1., 1., p, gaussian, 0.0001);
-  return 0 ; 
+ 
+ return 0 ; 
 }
 
