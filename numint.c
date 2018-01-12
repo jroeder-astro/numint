@@ -92,8 +92,19 @@ double singularity_trafo(double(*f)(double, void *), double x, void *p){
 
 double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), double e, 
                       double(*trafo)(double(*)(double, void *), double, void *)){
+
   // This function now takes an extra argument "trafo"
   // Which usually is an indentity_trafo which only gives back the function itself.
+  if (a==b)
+  {
+      return 0. ;
+  }
+
+  if(b < a)
+  {
+      return -1. * adapt_step_mid(b, a, p, f, e, trafo);
+  }
+
   double rel = 1.;
   double N = 1000.;
   double K = 3.;
@@ -161,7 +172,7 @@ double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), do
 	printf("a must be greater than zero and the upper must equal infinity.");
   	return 0.;
   }
-   
+
   double result = 0;
 
   if (a <= 0)
@@ -183,8 +194,17 @@ double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), do
 
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
 
-  // relative error e>0 
-  
+  if(a==b)
+  {
+      return 0. ;
+  }
+
+  if(b < a)
+  {
+      return -1. *adapt_step_trap(b, a, p, f,e);
+  }
+  // relative error e>0
+
   double rel = 1.; 		// initialize relative error 
   double N = 1000.;   		// initialize number of steps to start with for initial stepwidth
   double K = 2.;   		// initialize halving parameter
@@ -202,19 +222,20 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   T *= h/2.;
 
   while (rel >= e) // while loop for error control; runs while relative error is greater than given error 
-  {  
- 	T1 = 1./2. * T;    // calculate value with halved stepsize value 
-	for (int i = 0.; i <= /* N-1   */ ; i ++)  // That .../K thing is difficult to get into an int loop
-	{ 		      // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop, 
+  {
+
+      T1 = 1./2. * T;    // calculate value with halved stepsize value
+	    for (int i = 0.; i <= /* N-1   */ ; i ++)  // That .../K thing is difficult to get into an int loop
+	    { 		      // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop,
 			      // with stepsize 2h/K
-		double m = a + h/K + i * 2.*h/K  ;
-		T1 += h/K * (*f)(i,p);
-	} 
+		      double m = a + h/K + i * 2.*h/K  ;
+		      T1 += h/K * (*f)(i,p);
+	    }
 
-	rel = fabs(T-T1)/fabs(T1);  // calculate relative error
+	    rel = fabs(T-T1)/fabs(T1);  // calculate relative error
 
-  	K *= 2.; // halving the stepsize
-	T = T1; 
+  	  K *= 2.; // halving the stepsize
+	    T = T1;
   }
   printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
   return T;
@@ -224,6 +245,16 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
 double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)) {  // e is error
   // HOW DOES ONE PUT THE PARAMETERS IN HERE???   -> this apparently works lol  
   // double *p = (double*)params;  // Line not needed if void *p instead of void *params
+
+  if (a==b)
+  {
+      return 0. ;
+  }
+
+  if ( b < a )
+  {
+      return -1. * int_left_riemann(b, a,p, f);
+  }
 
   // double N = 10000.;
   double N =10000.;
@@ -245,6 +276,16 @@ double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)
 
 double int_right_riemann(double a, double b, void *p, double (*f)(double, void *)) {
   // right Riemann sum
+  if (a==b)
+  {
+    return 0. ;
+  }
+
+  if (b < a)
+  {
+      return -1. * int_right_riemann(b, a, p, f);
+  }
+
   double N =10000.;
   double h = (b - a) / N;
   double R = 0;
@@ -263,6 +304,17 @@ double int_right_riemann(double a, double b, void *p, double (*f)(double, void *
 
 double int_trapezoidal_double(double a, double b, void *p, double (*f)(double, void *)) {
   // trapezoidal rule
+
+  if (a==b)
+  {
+      return 0. ;
+  }
+
+  if ( b < a )
+  {
+      return -1. * int_trapezoidal_double(b, a, p, f);
+  }
+
   double N =10000.;
   double h = (b - a) / N;
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
@@ -281,7 +333,18 @@ double int_trapezoidal_double(double a, double b, void *p, double (*f)(double, v
 
 
 double int_trapezoidal_int(double a, double b, void *p, double (*f)(double, void *)) {
+
   // trapezoidal rule
+
+  if (a == b)
+  {
+      return 0. ;
+  }
+
+  if (b < a)
+  {
+    return -1. * int_trapezoidal_int(b, a, p, f);
+  }
   double N =10000.;
   double h = (b - a) / N;
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
@@ -302,6 +365,16 @@ double int_trapezoidal_int(double a, double b, void *p, double (*f)(double, void
 
 double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, void *)){
   // Simpson's rule
+  if (a==b)
+  {
+      return 0.;
+  }
+
+  if (b < a)
+  {
+      return -1. * int_simpson_one_loop(b, a, p, f);
+  }
+
   double N =100000.;
   double h = (b - a) / N;
   double S = (*f)(a,p)+(*f)(b,p);
@@ -326,6 +399,16 @@ double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, voi
 double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, void *)){
   // Simpson's rule // OUTDATED!!!
   // VERY crappy to do with two loops using m instead of i, DO NOT TOUCH THIS FUNCTION
+  if (a==b)
+  {
+       return 0.;
+  }
+
+  if (b < a)
+  {
+      return -1.* int_simpson_two_loop(b, a, p, f);
+  }
+
   double N =100000.;
   double h = (b - a) / N;
   double S = (*f)(a,p)+(*f)(b,p);
@@ -352,6 +435,15 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
 
 double montecarlo(double a, double b, void *p,  double (*f)(double, void *), double abe){
 
+  if (a == b)
+  {
+      return 0.;
+  }
+
+  if (b < a)
+  {
+      return -1. * montecarlo(b, a, p, f, abe);
+  }
   double N = 1000.;
   double h = (b-a)/N;
 
@@ -410,7 +502,17 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
 // Should at some point be revamped as parameters are technically being misused
 
 double sing_int(double a, double b, void *p, double(*f)(double, void*), double e){
-    
+
+  if (a==b)
+  {
+    return 0.;
+  }
+
+  if (b < a)
+  {
+      retrun -1. * sing_int(b, a, p, f, e);
+  }
+
   double *par = (double *)p; // parameters should not be used that way
   double g = par[0];
 
@@ -434,6 +536,16 @@ double sing_int(double a, double b, void *p, double(*f)(double, void*), double e
 // Optional task: Simpson's rule with stepsize halving
 
 double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), double e){
+
+  if (a == b)
+  {
+    return 0. ;
+  }
+
+  if (b < a)
+  {
+      return -1. * adapt_step_simp(b, a, p, f, e);
+  }
 
   double S = (*f)(a,p)+(*f)(b,p); // intital value, derived analytically
   double N = 100000.;
