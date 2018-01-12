@@ -463,7 +463,7 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
 	 tm = *localtime(&t);
 	 error = 0;
 	 result = 0;
- 	 printf("We are at N = %lf\n at : ", N);    // keeping track of calculations is awesome
+ 	 printf("We are at N = %d\n at : ", N);    // keeping track of calculations is awesome
          printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);	 
 
  	 for (int i = 0; i <= N; i ++) 
@@ -510,7 +510,7 @@ double sing_int(double a, double b, void *p, double(*f)(double, void*), double e
 
   if (b < a)
   {
-      retrun -1. * sing_int(b, a, p, f, e);
+      return -1. * sing_int(b, a, p, f, e);
   }
 
   double *par = (double *)p; // parameters should not be used that way
