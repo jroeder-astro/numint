@@ -201,7 +201,7 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
 
   if(b < a)
   {
-      return -1. *adapt_step_trap(b, a, p, f,e);
+      return -1. * adapt_step_trap(b, a, p, f,e);
   }
   // relative error e>0
 
@@ -225,16 +225,24 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   {
 
       T1 = 1./2. * T;    // calculate value with halved stepsize value
-	    for (int i = 0.; i <= /* N-1   */ ; i ++)  // That .../K thing is difficult to get into an int loop
-	    { 		      // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop,
-			      // with stepsize 2h/K
-		      double m = a + h/K + i * 2.*h/K  ;
-		      T1 += h/K * (*f)(i,p);
+
+      h = (b - a) / (double)N; // recalculate the stepsize
+
+	    for (int i = 0.; i <= N/2 -1; i ++)   // That .../K thing is difficult to get into an int loop
+	    {
+        // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop,
+			  // with stepsize 2h/K
+
+		      static double m = a + ( 1. + 2.*i )*h ; // for i being N-1 ==> a + (1+ 2N-2)h = a + N-1 *h + N * h= b-h + N* h = b-h + b - a
+                                                  // for i being N/2 ==> a + (1 + N)h = b +h
+                                                  // for i being N/2-1 ==> a +(1 + N -2)h = b-h !!!!
+                                                  // bu are there all needed steps in it ???
+		      T1 += h * (*f)(i,p);
 	    }
 
 	    rel = fabs(T-T1)/fabs(T1);  // calculate relative error
 
-  	  K *= 2.; // halving the stepsize
+  	  N *= 2; // halving the stepsize
 	    T = T1;
   }
   printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
@@ -464,7 +472,8 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
 	 error = 0;
 	 result = 0;
  	 printf("We are at N = %d\n at : ", N);    // keeping track of calculations is awesome
-         printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);	 
+
+    printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);
 
  	 for (int i = 0; i <= N; i ++) 
   	 {
