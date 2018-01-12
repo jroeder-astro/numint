@@ -106,9 +106,9 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   }
 
   double rel = 1.;
-  double N = 1000.;
+  int N = 1000;
   double K = 3.;
-  double h = (b-a)/N;
+  double h = (b-a)/(double)N;
   
   double M = h*(*trafo)(*f,a+h/2.,p);
   double M1 = 0.;
@@ -201,14 +201,14 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
 
   if(b < a)
   {
-      return -1. *adapt_step_trap(b, a, p, f,e);
+      return -1. * adapt_step_trap(b, a, p, f,e);
   }
   // relative error e>0
 
   double rel = 1.; 		// initialize relative error 
-  double N = 1000.;   		// initialize number of steps to start with for initial stepwidth
+  int N = 1000;   		// initialize number of steps to start with for initial stepwidth
   double K = 2.;   		// initialize halving parameter
-  double h = (b - a) / N;	// initialize stepwidth
+  double h = (b - a) / (double)N;	// initialize stepwidth
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated start value 
 
   double T1 = 0.;  // initialize halved stepsize value
@@ -225,16 +225,24 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   {
 
       T1 = 1./2. * T;    // calculate value with halved stepsize value
-	    for (int i = 0.; i <= /* N-1   */ ; i ++)  // That .../K thing is difficult to get into an int loop
-	    { 		      // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop,
-			      // with stepsize 2h/K
-		      double m = a + h/K + i * 2.*h/K  ;
-		      T1 += h/K * (*f)(i,p);
+
+      h = (b - a) / (double)N; // recalculate the stepsize
+
+	    for (int i = 0.; i <= N/2 -1; i ++)   // That .../K thing is difficult to get into an int loop
+	    {
+        // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop,
+			  // with stepsize 2h/K
+
+		      static double m = a + ( 1. + 2.*i )*h ; // for i being N-1 ==> a + (1+ 2N-2)h = a + N-1 *h + N * h= b-h + N* h = b-h + b - a
+                                                  // for i being N/2 ==> a + (1 + N)h = b +h
+                                                  // for i being N/2-1 ==> a +(1 + N -2)h = b-h !!!!
+                                                  // bu are there all needed steps in it ???
+		      T1 += h * (*f)(i,p);
 	    }
 
 	    rel = fabs(T-T1)/fabs(T1);  // calculate relative error
 
-  	  K *= 2.; // halving the stepsize
+  	  N *= 2; // halving the stepsize
 	    T = T1;
   }
   printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
@@ -257,8 +265,8 @@ double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)
   }
 
   // double N = 10000.;
-  double N =10000.;
-  double h = (b - a) / N;
+  int N =10000;
+  double h = (b - a) / (double)N;
 
   // left Riemann sum
   double L = (*f)(a, p);           // this bitch is the reason you gotta start with a+h in the for loop
@@ -286,8 +294,8 @@ double int_right_riemann(double a, double b, void *p, double (*f)(double, void *
       return -1. * int_right_riemann(b, a, p, f);
   }
 
-  double N =10000.;
-  double h = (b - a) / N;
+  int N =10000;
+  double h = (b - a) / (double)N;
   double R = 0;
   
   for (int i = 1; i <= N; i ++)
@@ -315,8 +323,8 @@ double int_trapezoidal_double(double a, double b, void *p, double (*f)(double, v
       return -1. * int_trapezoidal_double(b, a, p, f);
   }
 
-  double N =10000.;
-  double h = (b - a) / N;
+  int N =10000;
+  double h = (b - a) / (double)N;
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
 
   
@@ -345,8 +353,8 @@ double int_trapezoidal_int(double a, double b, void *p, double (*f)(double, void
   {
     return -1. * int_trapezoidal_int(b, a, p, f);
   }
-  double N =10000.;
-  double h = (b - a) / N;
+  int N =10000;
+  double h = (b - a) / (double)N;
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
 
   
@@ -375,8 +383,8 @@ double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, voi
       return -1. * int_simpson_one_loop(b, a, p, f);
   }
 
-  double N =100000.;
-  double h = (b - a) / N;
+  int N =100000;
+  double h = (b - a) / (double)N;
   double S = (*f)(a,p)+(*f)(b,p);
   for (int i = 1; i <= N-1; i ++){
 
@@ -409,8 +417,8 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
       return -1.* int_simpson_two_loop(b, a, p, f);
   }
 
-  double N =100000.;
-  double h = (b - a) / N;
+  int N =100000;
+  double h = (b - a) / (double)N;
   double S = (*f)(a,p)+(*f)(b,p);
   for (int i = 1; i <= N-1; i ++) {
     
@@ -444,8 +452,8 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
   {
       return -1. * montecarlo(b, a, p, f, abe);
   }
-  double N = 1000.;
-  double h = (b-a)/N;
+  int N = 1000;
+  double h = (b-a)/ (double)N;
 
   double result = 0.;
   double error = abe;
@@ -463,8 +471,9 @@ double montecarlo(double a, double b, void *p,  double (*f)(double, void *), dou
 	 tm = *localtime(&t);
 	 error = 0;
 	 result = 0;
- 	 printf("We are at N = %lf\n at : ", N);    // keeping track of calculations is awesome
-         printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);	 
+ 	 printf("We are at N = %d\n at : ", N);    // keeping track of calculations is awesome
+
+    printf("now %d:%d:%d\n",tm.tm_hour, tm.tm_min, tm.tm_sec);
 
  	 for (int i = 0; i <= N; i ++) 
   	 {
@@ -510,7 +519,7 @@ double sing_int(double a, double b, void *p, double(*f)(double, void*), double e
 
   if (b < a)
   {
-      retrun -1. * sing_int(b, a, p, f, e);
+      return -1. * sing_int(b, a, p, f, e);
   }
 
   double *par = (double *)p; // parameters should not be used that way
@@ -548,9 +557,9 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
   }
 
   double S = (*f)(a,p)+(*f)(b,p); // intital value, derived analytically
-  double N = 100000.;
+  int N = 100000;
   double K = 2.;
-  double h = (b - a) / N;
+  double h = (b - a) / (double)N;
   double S1 = 0.;
 
   double dummy_subs = 0.; // we need a substitute variable since we derived analytically that the following
