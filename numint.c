@@ -194,6 +194,7 @@ double infty_bound(double a, int isinf, void *p, double (*f)(double, void *), do
 
 double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *), double e){
 
+  printf("Integral FUnction called \n");
   if(a==b)
   {
       return 0. ;
@@ -206,7 +207,7 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   // relative error e>0
 
   double rel = 1.; 		// initialize relative error 
-  int N = 1000;   		// initialize number of steps to start with for initial stepwidth
+  int N = 100;   		// initialize number of steps to start with for initial stepwidth
   double K = 2.;   		// initialize halving parameter
   double h = (b - a) / (double)N;	// initialize stepwidth
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated start value 
@@ -215,29 +216,34 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
 
   for (int i = 1; i <= N-1; i ++)  // value of integral before stepsize halving, trapezoidal method
   {
-	double m = a+i*h;
+	    double m = a+ (double) i *h;
     	T += 2. * (*f)(m, p);
   }
 
   T *= h/2.;
 
+  printf("Start Stephalfing with T = %6.10lf\n", T);
+  double m;
+
   while (rel >= e) // while loop for error control; runs while relative error is greater than given error 
   {
+      printf("This is N = %d and T =%6.10lf and h = %6.10lf \n", N, T, h);
 
       T1 = 1./2. * T;    // calculate value with halved stepsize value
 
-      h = (b - a) / (double)N; // recalculate the stepsize
+      h = (b - a) / (double) N; // recalculate the stepsize
+      m = a + h;
 
-	    for (int i = 0.; i <= N/2 -1; i ++)   // That .../K thing is difficult to get into an int loop
+	    for (int i = 0; i <= N/2 -1; i++)   // That .../K thing is difficult to get into an int loop
 	    {
-        // This N-1 is wrong, but no idea how to put a+h/k......b-h/K into this loop,
-			  // with stepsize 2h/K
-
-		      static double m = a + ( 1. + 2.*i )*h ; // for i being N-1 ==> a + (1+ 2N-2)h = a + N-1 *h + N * h= b-h + N* h = b-h + b - a
-                                                  // for i being N/2 ==> a + (1 + N)h = b +h
-                                                  // for i being N/2-1 ==> a +(1 + N -2)h = b-h !!!!
-                                                  // bu are there all needed steps in it ???
-		      T1 += h * (*f)(i,p);
+        // this formula is used to determine which Maximum i we need
+		    //  static double m = a + ( 1. + 2.* (double) i )*h ;
+        // for i being N-1 ==> a + (1+ 2N-2)h = a + N-1 *h + N * h= b-h + N* h = b-h + b - a
+        // for i being N/2 ==> a + (1 + N)h = b +h
+        // for i being N/2-1 ==> a +(1 + N -2)h = b-h !!!!
+        // but are there all needed steps in it ???
+		      T1 += h * (*f)(m,p);
+          m += 2* (double) h;
 	    }
 
 	    rel = fabs(T-T1)/fabs(T1);  // calculate relative error
@@ -245,7 +251,6 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   	  N *= 2; // halving the stepsize
 	    T = T1;
   }
-  printf("Trapezoidal method, enhanced with stepsize halving (super amazing!), gives us T = %+6.10lf \n", T);
   return T;
 }
 
@@ -611,13 +616,19 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
 
 
 int main(){
-  
+
+  printf("main startet \n");
   double x;
 
   double p[2] = {0., 1.}; // array with mu and sigma
   
   double q[2] = {0.5,0.}; // order of singularity
 
+  double result ;
+
+  result = adapt_step_trap(0., 2., NULL, somecos, 0.00000001);
+
+  printf("The result of adapt_step_trap is : %+6.10lf \n", result);
 
 //  adapt_step_simp(-1., 1., p, gaussian, 0.01);
 
@@ -635,11 +646,11 @@ int main(){
 //  montecarlo(-1., 1., p, gaussian, 0.000001);
 
 
-  int_left_riemann(-1.,1.,p, gaussian);
-  int_right_riemann(-1.,1.,p, gaussian);
+//  int_left_riemann(-1.,1.,p, gaussian);
+//  int_right_riemann(-1.,1.,p, gaussian);
 
-  int_trapezoidal_int(-1.,1,p, gaussian);
-  int_trapezoidal_double(-1.,1,p, gaussian);
+//  int_trapezoidal_int(-1.,1,p, gaussian);
+//  int_trapezoidal_double(-1.,1,p, gaussian);
 
 
 //  int_simpson_one_loop(-1.,1,p,gaussian);
