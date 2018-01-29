@@ -137,7 +137,7 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
 
     for (int i = 1; i <= 2*N*K/3. ;i++)
     {
-      printf("i=%d", i);
+
       // We do not actually loop here, the "loop" is executed by an if statement to
       // implement the e,n,e,e,n,e,e,n,...,n,e law. It might not matter here if
       // there is a double in the for loop.
@@ -150,8 +150,6 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
        else {
         m += 2. * h / K;
       }
-
-      cnt += 1;
     }
 
     rel = fabs(M - M1) / fabs(M1);  // calculate relative error
@@ -593,6 +591,7 @@ int main() {
   double result;
   printf("Numerical Integration Programm started ... \n");
   printf("All results will be shown till 15^⁻10.\n");
+  printf("All Integrals will do 1000 steps, unless they use semiadaptive stepsizes ofc..\n");
   printf("1) Integrate the Function x cos(2 pi x²)² \n");
   printf("------------------------------------------\n");
 
