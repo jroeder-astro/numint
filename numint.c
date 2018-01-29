@@ -588,9 +588,9 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
 }
 
 
+
 int main() {
 
-  printf("main startet \n");
   double x;
 
   double p[2] = {0., 1.}; // array with mu and sigma
@@ -598,6 +598,138 @@ int main() {
   double q[2] = {0.5, 0.}; // order of singularity
 
   double result;
+  printf("Numerical Integration Programm started ... \n");
+  printf("All results will be shown till 15^⁻10.\n");
+  printf("1) Integrate the Function x cos(2 pi x²)² \n");
+  printf("------------------------------------------\n");
+
+  printf("Riemann Leftsum :\n");
+  result = int_left_riemann(0.,2.,NULL,somecos);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Riemann Rightsum :\n");
+  result = int_trapezoidal_int(0.,2.,NULL,somecos);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Trapezoidal Rule :\n");
+  result = int_trapezoidal_int(0.,2.,NULL,somecos);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Trapezoidal Rule with semiadaptive stepsizes :\n");
+  printf("Relative error e = 0.00001\n");
+  result = adapt_step_trap(0.,2.,NULL,somecos,0.00001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Simpsons Rule :\n");
+  result = int_simpson_one_loop(0.,2.,NULL,somecos);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Midpoint Rule with semiadaptive stepsizes :\n");
+  printf("Relative error e = 0.00001\n");
+  result = adapt_step_mid(0.,2.,NULL,somecos, 0.00001, indentity_trafo);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Open boundary Integration :\n");
+  printf("We integrate the function exp(x²) from 0 to infinity.\n");
+  printf("Relative error e = 0.00001\n");
+  result = infty_bound(0.,1,NULL,quadexp,0.00001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Monte Carlo Integration :\n");
+  printf("The absoloute error abse = 0.001\n");
+  printf("This Integration is O(N²)\n")
+  result = montecarlo(0.,2.,NULL,somcos,0.001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("2) Integrate the Function the gaussian with mean = 0 and standart deviation = 1 \n");
+  printf("------------------------------------------\n");
+
+  printf("Riemann Leftsum :\n");
+  result = int_left_riemann(-1.,1.,p,gaussian);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Riemann Rightsum :\n");
+  result = int_trapezoidal_int(-1.,1.,p,gaussian);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Trapezoidal Rule :\n");
+  result = int_trapezoidal_int(-1.,1.,p,gaussian);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Trapezoidal Rule with semiadaptive stepsizes :\n");
+  printf("Relative error e = 0.00001\n");
+  result = adapt_step_trap(-1.,1.,p,gaussian,0.00001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Simpsons Rule :\n");
+  result = int_simpson_one_loop(-1.,1.,p,gaussian);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Midpoint Rule with semiadaptive stepsizes :\n");
+  printf("Relative error e = 0.00001\n");
+  result = adapt_step_mid(-1.,1.,p,gaussian, 0.00001, indentity_trafo);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Open boundary Integration : skipped, allready done.\n");
+
+
+  printf("------------------------------------------\n");
+
+  printf("Monte Carlo Integration :\n");
+  printf("The absoloute error abse = 0.001\n");
+  printf("This Integration is O(N²)\n")
+  result = montecarlo(-1.,1.,p,gaussian,0.001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+  printf("------------------------------------------\n");
+
+  printf("Optional Tasks :\n");
+
+  printf("Integrate functions with integrateable Sin:\n");
+  printf("Relative error e = 0.00001\n");
+  result = sing_int(0., 1.,q,inverse_sqrt,0.00001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+  printf("Simpsons Rule with semiadaptive stepsizes:\n");
+  printf("We integrate the cos function from Part 1.")
+  printf("Relative error e = 0.00001\n");
+  result = adapt_step_simp(0., 2.,NULL,somecos,0.00001);
+  printf("The result is : %lf+2.15\n", result);
+
+  printf("------------------------------------------\n");
+
+
 
   //result = adapt_step_trap(0., 2., NULL, somecos, 0.00000001);
   result = adapt_step_mid(0., 2., NULL, somecos, 0.0000001, identity_trafo);
