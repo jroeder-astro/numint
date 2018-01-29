@@ -701,9 +701,10 @@ int main() {
   printf("The result is : %+2.15lf\n", result);
 
   printf("------------------------------------------\n");
-  printf("------------------------------------------\n");
 
-  printf("Optional Tasks:\n");
+  printf("\n3) Optional tasks \n");
+
+  printf("------------------------------------------\n");
 
   printf("Integrate functions with integrateable singularity:\n");
   printf("Relative error e = 0.00001\n");
@@ -713,7 +714,7 @@ int main() {
   printf("------------------------------------------\n");
 
   printf("Simpson's rule with semiadaptive stepsizes:\n");
-  printf("We integrate the cos function from part 1.");
+  printf("We integrate the cos function from part 1.\n");
   printf("Relative error e = 0.00001\n");
   result = adapt_step_simp(0., 2.,NULL,somecos,0.00001);
   printf("The result is : %+2.15lf\n", result);
