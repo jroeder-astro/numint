@@ -104,7 +104,7 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   }
 
   double rel = 1.;
-  int N = 10000;
+  int N = 1000;
   double K = 3.;
   double h = (b - a) / (double) N;
 
@@ -127,22 +127,23 @@ double adapt_step_mid(double a, double b, void *p, double (*f)(double, void *), 
   }
 
 
-  int cnt = 1; // counter used for stepsize in iterations > h/3. "eval, not, eval, eval, not, e, e, n,...."  
+  // counter used for stepsize in iterations > h/3. "eval, not, eval, eval, not, e, e, n,...."
 
   while (rel >= e) {
-    cnt = 1;
+
     M1 = 1. / 3. * M;
     m = a+ h/(2.*K);
     // for (double i = a + h / (2. * K); i <= b - h / (2. * K); i += 0) // analytically derived formula for step tripling
 
     for (int i = 1; i <= 2*N*K/3. ;i++)
     {
+      printf("i=%d", i);
       // We do not actually loop here, the "loop" is executed by an if statement to
       // implement the e,n,e,e,n,e,e,n,...,n,e law. It might not matter here if
       // there is a double in the for loop.
 
       M1 += h / K * (*trafo)(*f, m, p);
-      if (cnt % 2 == 0)  // doing the e, n, e, e, n, e, e, n,... stuff
+      if (i % 2 == 0)  // doing the e, n, e, e, n, e, e, n,... stuff
       {
         m += h / K;
       }
@@ -202,7 +203,7 @@ double adapt_step_trap(double a, double b, void *p, double (*f)(double, void *),
   // relative error e>0
 
   double rel = 1.;    // initialize relative error
-  int N = 100;      // initialize number of steps to start with for initial stepwidth
+  int N = 1000;      // initialize number of steps to start with for initial stepwidth
   double K = 2.;      // initialize halving parameter
   double h = (b - a) / (double) N;  // initialize stepwidth
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated start value 
@@ -262,7 +263,7 @@ double int_left_riemann(double a, double b, void *p, double (*f)(double, void *)
   }
 
   // double N = 10000.;
-  int N = 10000;
+  int N = 1000;
   double h = (b - a) / (double) N;
 
   // left Riemann sum
@@ -288,7 +289,7 @@ double int_right_riemann(double a, double b, void *p, double (*f)(double, void *
     return -1. * int_right_riemann(b, a, p, f);
   }
 
-  int N = 10000;
+  int N = 1000;
   double h = (b - a) / (double) N;
   double R = 0;
 
@@ -314,7 +315,7 @@ double int_trapezoidal_double(double a, double b, void *p, double (*f)(double, v
     return -1. * int_trapezoidal_double(b, a, p, f);
   }
 
-  int N = 10000;
+  int N = 1000;
   double h = (b - a) / (double) N;
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
 
@@ -340,7 +341,7 @@ double int_trapezoidal_int(double a, double b, void *p, double (*f)(double, void
   if (b < a) {
     return -1. * int_trapezoidal_int(b, a, p, f);
   }
-  int N = 10000;
+  int N = 1000;
   double h = (b - a) / (double) N;
   double T = (*f)(a, p) + (*f)(b, p); //analytically evaluated
 
@@ -366,7 +367,7 @@ double int_simpson_one_loop(double a, double b, void *p, double (*f)(double, voi
     return -1. * int_simpson_one_loop(b, a, p, f);
   }
 
-  int N = 100000;
+  int N = 1000;
   double h = (b - a) / (double) N;
   double S = (*f)(a, p) + (*f)(b, p);
   for (int i = 1; i <= N - 1; i++) {
@@ -397,7 +398,7 @@ double int_simpson_two_loop(double a, double b, void *p, double (*f)(double, voi
     return -1. * int_simpson_two_loop(b, a, p, f);
   }
 
-  int N = 100000;
+  int N = 1000;
   double h = (b - a) / (double) N;
   double S = (*f)(a, p) + (*f)(b, p);
   for (int i = 1; i <= N - 1; i++) {
@@ -523,7 +524,7 @@ double adapt_step_simp(double a, double b, void *p, double(*f)(double, void *), 
   }
 
   double S = (*f)(a, p) + (*f)(b, p); // intital value, derived analytically
-  int N = 10000;
+  int N = 1000;
   double K = 2.;
   double h = (b - a) / (double) N;
   double S1 = 0.;
