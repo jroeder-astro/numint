@@ -728,43 +728,7 @@ int main() {
   printf("The result is : %lf+2.15\n", result);
 
   printf("------------------------------------------\n");
-
-
-
-  //result = adapt_step_trap(0., 2., NULL, somecos, 0.00000001);
-  result = adapt_step_mid(0., 2., NULL, somecos, 0.0000001, identity_trafo);
-
-  printf("The result of adapt_step_trap is : %+6.30lf \n", result);
-
-//  adapt_step_simp(-1., 1., p, gaussian, 0.01);
-
-
-//  sing_int(0., 1., q, inverse_sqrt, 0.000001);
-
-
-//  infty_bound(0, 1, NULL, quadexp, 0.01);
-
-
-//  adapt_step_mid(0., 2., NULL, somecos, 0.99, identity_trafo);
-//  adapt_step_mid(0., 2., NULL, somecos, 0.0001, identity_trafo);
-
-
-//  montecarlo(-1., 1., p, gaussian, 0.000001);
-
-
-//  int_left_riemann(-1.,1.,p, gaussian);
-//  int_right_riemann(-1.,1.,p, gaussian);
-
-//  int_trapezoidal_int(-1.,1,p, gaussian);
-//  int_trapezoidal_double(-1.,1,p, gaussian);
-
-
-//  int_simpson_one_loop(-1.,1,p,gaussian);
-//  int_simpson_two_loop(-1.,1,p,gaussian);
-
-
-//  adapt_step_trap(-1., 1., p, gaussian, 0.0001);
-
+  
   return 0;
 }
 
