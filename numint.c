@@ -649,7 +649,7 @@ int main() {
 
   printf("------------------------------------------\n");
 
-  printf("\n2) Integrate the gaussian with mean = 0 and standart deviation = 1 \n");
+  printf("\n2) Integrate the gaussian with mean = 0 and standard deviation = 1 \n");
   printf("------------------------------------------\n");
 
   printf("Riemann left sum :\n");
